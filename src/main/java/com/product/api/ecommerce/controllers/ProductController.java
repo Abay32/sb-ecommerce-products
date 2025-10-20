@@ -2,6 +2,7 @@ package com.product.api.ecommerce.controllers;
 
 import com.product.api.ecommerce.dto.ProductDto;
 import com.product.api.ecommerce.dto.ProductResponse;
+import com.product.api.ecommerce.exceptions.AlreadyExistsException;
 import com.product.api.ecommerce.exceptions.ProductNotFoundException;
 import com.product.api.ecommerce.mappers.ProductMapper;
 import com.product.api.ecommerce.models.Category;
@@ -73,11 +74,19 @@ public class ProductController {
 
     }
 
+    private boolean productExists(String product_name, Byte categoryId){
+        return productRepository.existsByNameAndCategoryId(product_name, categoryId);
+    }
+
     @PostMapping("/create")
     public ResponseEntity<ProductDto> createProduct(
             UriComponentsBuilder uriBuilder,
             @RequestBody ProductDto productDto
         ) {
+
+        if( productExists(productDto.getProduct_name(), productDto.getCategoryId() )){
+            throw new AlreadyExistsException(productDto.getProduct_name()+" " + productDto.getCategoryId()+ " already exists.");
+        }
 
         var category =  categoryRepository.findById(productDto.getCategoryId()).orElse(null);
 
